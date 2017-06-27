@@ -12,6 +12,7 @@ import (
 	"github.com/pingcap/tipb/go-mysqlx"
 	"github.com/pingcap/tipb/go-mysqlx/Connection"
 	"github.com/pingcap/tipb/go-mysqlx/Notice"
+	"github.com/pingcap/tipb/go-mysqlx/Resultset"
 	"github.com/pingcap/tipb/go-mysqlx/Session"
 	"github.com/pingcap/tipb/go-mysqlx/Sql"
 )
@@ -98,6 +99,22 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte) 
 		var authOk Mysqlx_Session.AuthenticateOk
 		proto.Unmarshal(payload, &authOk)
 		contentS = authOk.String()
+	case Mysqlx.ServerMessages_RESULTSET_COLUMN_META_DATA:
+		var rcmd Mysqlx_Resultset.ColumnMetaData
+		proto.Unmarshal(payload, &rcmd)
+		contentS = rcmd.String()
+	case Mysqlx.ServerMessages_RESULTSET_ROW:
+		var row Mysqlx_Resultset.Row
+		proto.Unmarshal(payload, &row)
+		contentS = row.String()
+	case Mysqlx.ServerMessages_RESULTSET_FETCH_DONE:
+		var done Mysqlx_Resultset.FetchDone
+		proto.Unmarshal(payload, &done)
+		contentS = done.String()
+	case Mysqlx.ServerMessages_SQL_STMT_EXECUTE_OK:
+		var sqlOk Mysqlx_Sql.StmtExecuteOk
+		proto.Unmarshal(payload, &sqlOk)
+		contentS = sqlOk.String()
 	}
 	msg = fmt.Sprintf(msg, typeS, contentS)
 	fmt.Println(msg)
