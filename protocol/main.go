@@ -39,7 +39,7 @@ func inAndOut(name string) (*os.File, *os.File, error) {
 	return fin, fout, nil
 }
 
-func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte) {
+func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, f *os.File) {
 	var msg = "client message type: %s, content: %s"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
@@ -63,10 +63,10 @@ func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte) 
 		contentS = sql.String()
 	}
 	msg = fmt.Sprintf(msg, typeS, contentS)
-	fmt.Println(msg)
+	f.WriteString(msg)
 }
 
-func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte) {
+func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, f *os.File) {
 	var msg = "server message type: %s, content: %s"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
@@ -117,7 +117,7 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte) 
 		contentS = sqlOk.String()
 	}
 	msg = fmt.Sprintf(msg, typeS, contentS)
-	fmt.Println(msg)
+	f.WriteString(msg)
 }
 
 func extractMessages(isClient bool) (err error) {
@@ -150,9 +150,9 @@ func extractMessages(isClient bool) (err error) {
 			break
 		}
 		if isClient {
-			deal_with_client_message(Mysqlx.ClientMessages_Type(message_type), payload[0:payloadLen])
+			deal_with_client_message(Mysqlx.ClientMessages_Type(message_type), payload[0:payloadLen], fout)
 		} else {
-			deal_with_server_message(Mysqlx.ServerMessages_Type(message_type), payload[0:payloadLen])
+			deal_with_server_message(Mysqlx.ServerMessages_Type(message_type), payload[0:payloadLen], fout)
 		}
 	}
 	if err == io.EOF {
