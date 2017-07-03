@@ -40,7 +40,7 @@ func inAndOut(name string) (*os.File, *os.File, error) {
 }
 
 func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, f *os.File) {
-	var msg = "client message type: %s, content: %s"
+	var msg = "client message type: %s, content: %s\n"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
 	switch mtype {
@@ -67,7 +67,7 @@ func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, 
 }
 
 func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, f *os.File) {
-	var msg = "server message type: %s, content: %s"
+	var msg = "server message type: %s, content: %s\n"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
 	switch mtype {
