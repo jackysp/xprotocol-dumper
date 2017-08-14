@@ -31,7 +31,7 @@ struct sniff_ip {
 #define IP_OFFMASK 0x1fff       /* mask for fragmenting bits */
 
 #define IP_VERSION(ip)          (((ip)->ip_vhl) >> 4)
-#define IP_HEADER_LENGTH(ip)    (((ip)->ip_vhl) & 0x0f)
+#define IP_HEADER_LENGTH(ip)    ((((ip)->ip_vhl) & 0x0f) << 2)
 
 /* TCP header */
 struct sniff_tcp {

@@ -29,9 +29,10 @@ pcap_t* open_device(char const *name)
 void deal_packet(u_char *arg, const struct pcap_pkthdr *pkthdr, const u_char *packet)
 {
     struct sniff_ip *ip = (struct sniff_ip *)(packet + ETHER_SIZE);
-    char *ip_src = inet_ntoa(ip->ip_src);
-    char *ip_dst = inet_ntoa(ip->ip_dst);
-    int ip_size = IP_HEADER_LENGTH(ip) << 2;
+    char ip_src[32], ip_dst[32];
+    strcpy(ip_src, inet_ntoa(ip->ip_src));
+    strcpy(ip_dst, inet_ntoa(ip->ip_dst));
+    int ip_size = IP_HEADER_LENGTH(ip);
 
     struct sniff_tcp *tcp = (struct sniff_tcp *)(packet + ETHER_SIZE + ip_size);
     unsigned short port_src = htons(tcp->tcp_sport);
