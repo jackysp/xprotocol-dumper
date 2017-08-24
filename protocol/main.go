@@ -138,7 +138,7 @@ func extractMessages(isClient bool) (err error) {
 	var length uint32 = 0
 	var message_type uint8 = 0
 	var payloadLen int
-	var payload = make([]byte, 4096)
+	var payload = make([]byte, 1e8)
 	for {
 		if err = binary.Read(fin, binary.LittleEndian, &length); err != nil {
 			break

@@ -3,4 +3,4 @@ all:
 	cd protocol && make
 
 clean:
-	@rm -rf *.tcpdump *.txt
+	@rm -f tcpdump/dumper protocol/protocol tcpdump/*.tcpdump tcpdump/*.txt
