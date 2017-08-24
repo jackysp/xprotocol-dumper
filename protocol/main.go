@@ -11,6 +11,8 @@ import (
 	"github.com/juju/errors"
 	"github.com/pingcap/tipb/go-mysqlx"
 	"github.com/pingcap/tipb/go-mysqlx/Connection"
+	"github.com/pingcap/tipb/go-mysqlx/Crud"
+	"github.com/pingcap/tipb/go-mysqlx/Expect"
 	"github.com/pingcap/tipb/go-mysqlx/Notice"
 	"github.com/pingcap/tipb/go-mysqlx/Resultset"
 	"github.com/pingcap/tipb/go-mysqlx/Session"
@@ -44,11 +46,18 @@ func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, 
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
 	switch mtype {
+	case Mysqlx.ClientMessages_CON_CAPABILITIES_GET:
+		var data Mysqlx_Connection.CapabilitiesGet
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	case Mysqlx.ClientMessages_CON_CAPABILITIES_SET:
 		var caps Mysqlx_Connection.CapabilitiesSet
 		proto.Unmarshal(payload, &caps)
 		contentS = caps.String()
-	case Mysqlx.ClientMessages_CON_CAPABILITIES_GET:
+	case Mysqlx.ClientMessages_CON_CLOSE:
+		var data Mysqlx_Connection.Close
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	case Mysqlx.ClientMessages_SESS_AUTHENTICATE_START:
 		var authStart Mysqlx_Session.AuthenticateStart
 		proto.Unmarshal(payload, &authStart)
@@ -57,10 +66,54 @@ func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, 
 		var authCont Mysqlx_Session.AuthenticateContinue
 		proto.Unmarshal(payload, &authCont)
 		contentS = authCont.String()
+	case Mysqlx.ClientMessages_SESS_RESET:
+		var data Mysqlx_Session.Reset
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_SESS_CLOSE:
+		var data Mysqlx_Session.Close
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	case Mysqlx.ClientMessages_SQL_STMT_EXECUTE:
 		var sql Mysqlx_Sql.StmtExecute
 		proto.Unmarshal(payload, &sql)
 		contentS = sql.String()
+	case Mysqlx.ClientMessages_CRUD_FIND:
+		var data Mysqlx_Crud.Find
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_INSERT:
+		var data Mysqlx_Crud.Insert
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_UPDATE:
+		var data Mysqlx_Crud.Update
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_DELETE:
+		var data Mysqlx_Crud.Delete
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_EXPECT_OPEN:
+		var data Mysqlx_Expect.Open
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_EXPECT_CLOSE:
+		var data Mysqlx_Expect.Close
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_CREATE_VIEW:
+		var data Mysqlx_Crud.CreateView
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_MODIFY_VIEW:
+		var data Mysqlx_Crud.ModifyView
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
+	case Mysqlx.ClientMessages_CRUD_DROP_VIEW:
+		var data Mysqlx_Crud.DropView
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	}
 	msg = fmt.Sprintf(msg, typeS, contentS)
 	f.WriteString(msg)
@@ -75,6 +128,10 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, 
 		var ok Mysqlx.Ok
 		proto.Unmarshal(payload, &ok)
 		contentS = ok.String()
+	case Mysqlx.ServerMessages_ERROR:
+		var data Mysqlx.Error
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	case Mysqlx.ServerMessages_CONN_CAPABILITIES:
 		var caps Mysqlx_Connection.Capabilities
 		proto.Unmarshal(payload, &caps)
@@ -83,6 +140,10 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, 
 		var authCont Mysqlx_Session.AuthenticateContinue
 		proto.Unmarshal(payload, &authCont)
 		contentS = authCont.String()
+	case Mysqlx.ServerMessages_SESS_AUTHENTICATE_OK:
+		var authOk Mysqlx_Session.AuthenticateOk
+		proto.Unmarshal(payload, &authOk)
+		contentS = authOk.String()
 	case Mysqlx.ServerMessages_NOTICE:
 		var notice Mysqlx_Notice.Frame
 		proto.Unmarshal(payload, &notice)
@@ -95,10 +156,6 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, 
 			proto.Unmarshal(payload, &ssc)
 			contentS = fmt.Sprintf("(scope: %s, payload: %s)", notice.GetScope().String(), ssc.String())
 		}
-	case Mysqlx.ServerMessages_SESS_AUTHENTICATE_OK:
-		var authOk Mysqlx_Session.AuthenticateOk
-		proto.Unmarshal(payload, &authOk)
-		contentS = authOk.String()
 	case Mysqlx.ServerMessages_RESULTSET_COLUMN_META_DATA:
 		var rcmd Mysqlx_Resultset.ColumnMetaData
 		proto.Unmarshal(payload, &rcmd)
@@ -111,10 +168,19 @@ func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, 
 		var done Mysqlx_Resultset.FetchDone
 		proto.Unmarshal(payload, &done)
 		contentS = done.String()
+	case Mysqlx.ServerMessages_RESULTSET_FETCH_SUSPENDED:
+	case Mysqlx.ServerMessages_RESULTSET_FETCH_DONE_MORE_RESULTSETS:
+		var data Mysqlx_Resultset.FetchDoneMoreResultsets
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	case Mysqlx.ServerMessages_SQL_STMT_EXECUTE_OK:
 		var sqlOk Mysqlx_Sql.StmtExecuteOk
 		proto.Unmarshal(payload, &sqlOk)
 		contentS = sqlOk.String()
+	case Mysqlx.ServerMessages_RESULTSET_FETCH_DONE_MORE_OUT_PARAMS:
+		var data Mysqlx_Resultset.FetchDoneMoreOutParams
+		proto.Unmarshal(payload, &data)
+		contentS = data.String()
 	}
 	msg = fmt.Sprintf(msg, typeS, contentS)
 	f.WriteString(msg)
@@ -138,7 +204,7 @@ func extractMessages(isClient bool) (err error) {
 	var length uint32 = 0
 	var message_type uint8 = 0
 	var payloadLen int
-	var payload = make([]byte, 1e8)
+	var payload = make([]byte, 6553600)
 	for {
 		if err = binary.Read(fin, binary.LittleEndian, &length); err != nil {
 			break
@@ -146,6 +212,7 @@ func extractMessages(isClient bool) (err error) {
 		if err = binary.Read(fin, binary.LittleEndian, &message_type); err != nil {
 			break
 		}
+		fmt.Println("yusp", length)
 		if payloadLen, err = fin.Read(payload[0 : length-1]); err != nil {
 			break
 		}
