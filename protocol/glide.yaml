@@ -1,4 +1,0 @@
-package: github.com/hicqu/mysqlx
-import:
-    - package: github.com/pingcap/tipb
-      version: dcc6ecc5d70e5094b7acc0374a6b2726f8176dbe

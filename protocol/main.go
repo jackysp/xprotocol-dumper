@@ -25,7 +25,7 @@ var (
 )
 
 func rename(name string) string {
-	return fmt.Sprintf("%s.txt", name[0:len(name)-8])
+	return fmt.Sprintf("%s.txt", name[:len(name)-8])
 }
 
 func inAndOut(name string) (*os.File, *os.File, error) {
@@ -41,7 +41,7 @@ func inAndOut(name string) (*os.File, *os.File, error) {
 	return fin, fout, nil
 }
 
-func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, f *os.File) {
+func dealClientMsg(mtype Mysqlx.ClientMessages_Type, payload []byte, f *os.File) {
 	var msg = "client message type: %s, content: %s\n"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
@@ -119,7 +119,7 @@ func deal_with_client_message(mtype Mysqlx.ClientMessages_Type, payload []byte, 
 	f.WriteString(msg)
 }
 
-func deal_with_server_message(mtype Mysqlx.ServerMessages_Type, payload []byte, f *os.File) {
+func dealServerMsg(mtype Mysqlx.ServerMessages_Type, payload []byte, f *os.File) {
 	var msg = "server message type: %s, content: %s\n"
 	var typeS = mtype.String()
 	var contentS = "NO CONTENT"
@@ -201,25 +201,27 @@ func extractMessages(isClient bool) (err error) {
 	defer fin.Close()
 	defer fout.Close()
 
-	var length uint32 = 0
-	var message_type uint8 = 0
+	var length uint32
+	var messageType uint8
 	var payloadLen int
 	var payload = make([]byte, 6553600)
 	for {
 		if err = binary.Read(fin, binary.LittleEndian, &length); err != nil {
 			break
 		}
-		if err = binary.Read(fin, binary.LittleEndian, &message_type); err != nil {
+		if err = binary.Read(fin, binary.LittleEndian, &messageType); err != nil {
 			break
 		}
-		fmt.Println("yusp", length)
-		if payloadLen, err = fin.Read(payload[0 : length-1]); err != nil {
+		if payloadLen, err = fin.Read(payload[:length-1]); err != nil {
 			break
+		}
+		if payloadLen != int(length-1) {
+			fmt.Println("yusp", length, payloadLen)
 		}
 		if isClient {
-			deal_with_client_message(Mysqlx.ClientMessages_Type(message_type), payload[0:payloadLen], fout)
+			dealClientMsg(Mysqlx.ClientMessages_Type(messageType), payload[:payloadLen], fout)
 		} else {
-			deal_with_server_message(Mysqlx.ServerMessages_Type(message_type), payload[0:payloadLen], fout)
+			dealServerMsg(Mysqlx.ServerMessages_Type(messageType), payload[:payloadLen], fout)
 		}
 	}
 	if err == io.EOF {

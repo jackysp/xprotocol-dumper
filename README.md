@@ -5,3 +5,9 @@
 4. 之后可以在protocol目录下，执行`./protocol -client x.tcpdump -server y.tcpdump`。
   命令的第三、第五个参数分别是两个tcpdump文件名。
 5. 之后，便在tcpdump目录下得到两个txt文件，便是协议的内容了。
+
+ps: mysql server 启动时要增加skip-ssl这个选项，否则会解析错误。具体的，
+1. 如果是源码编译的mysqld，直接启动的时候增加选项`--skip-ssl`或者增加到指定的
+defaults-file里;
+2. 如果是直接安装的二进制包，如deb包，可以在`/etc/mysql/mysql.conf.d/mysqld.cnf`里加入`skip-ssl`后,
+重启mysql server `service mysql restart`.
